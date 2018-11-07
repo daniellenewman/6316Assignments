@@ -40,7 +40,8 @@ def KMeans(K, data, dist_measure = "euclidean"):
             
             # Divide all sums by number of samples in cluster to get average
             for i in range(len(averages)):
-                averages[i] /= len(centroid_assignments[centroid])
+                if(len(centroid_assignments[centroid]) != 0):
+                    averages[i] /= len(centroid_assignments[centroid])
             
             # Re-assign centroid values
             for i in range(len(centroids[centroid])):
