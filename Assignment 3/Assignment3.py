@@ -7,7 +7,7 @@ data = pd.read_csv("housing.csv")
 # Drop rows containing NaN values (only total_bedrooms does)
 data = data.dropna()
 
-def KMeans(K, data, dist_measure):
+def KMeans(K, data, dist_measure = "euclidean"):
     # Initialize K centroids randomly
     centroids = []
     for i in range(K):
@@ -15,24 +15,58 @@ def KMeans(K, data, dist_measure):
         for feature in data.columns:
             centroids[i].append(uniform(data[feature].min(), data[feature].max()))
     
-    # Assign all data to centroids
+    # Initialize centroid_assignments data structure
     centroid_assignments = {}
-    for index, row in data.iterrows():
-        centroid_assignments[index] = assign_to_cluster(centroids, row, dist_measure)
+    for i in range(K):
+        centroid_assignments[i] = []
     
-    # Recalculate centroids and reassign data until there is no change
-    new_centroid_assignments = {}
-    while(True):
-        if centroid_assignments = new_centroid_assignments:
-            return centroids, centroid_assignments
+    # Assign all data to centroids
+    for index, row in data.iterrows():
+        centroid_assignments[assign_to_cluster(centroids, row, dist_measure)].append(index)
+
+    while True:
+        # Recompute centroids
+        for centroid in centroid_assignments:
+            # Reset averages of all features to 0
+            averages = []
+            for i in range(len(data.columns)):
+                averages.append(0)
+            
+            # Iterate over samples in this cluster,
+            # adding their features to average
+            for sample in centroid_assignments[centroid]:
+                for i in range(len(data.columns)):
+                    averages[i] += data.at[sample, data.columns[i]]
+            
+            # Divide all sums by number of samples in cluster to get average
+            for i in range(len(averages)):
+                averages[i] /= len(centroid_assignments[centroid])
+            
+            # Re-assign centroid values
+            for i in range(len(centroids[centroid])):
+                centroids[centroid][i] = averages[i]
+        
+        # Reassign data to clusters
+        new_centroid_assignments = {}
+        for i in range(K):
+            new_centroid_assignments[i] = []
+        
+        for index, row in data.iterrows():
+            new_centroid_assignments[assign_to_cluster(centroids, row, dist_measure)].append(index)
+        
+        # If clusters have not changed, we're done
+        if new_centroid_assignments == centroid_assignments:
+            return centroid_assignments
+        else:
+            centroid_assignments = new_centroid_assignments
         
     
 
 def assign_to_cluster(centroids, sample, dist_measure):
-    if dist_measure == "euclidean":        
+    if dist_measure == "euclidean":
         # Find which centroid the sample is the closest to
         # according to the Euclidean distance measure
-        min_distance = -np.inf
+        min_distance = np.inf
         best_centroid = -1
         for i in range(len(centroids)):
             distance = euclidean_distance(centroids[i], sample)
